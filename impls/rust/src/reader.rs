@@ -8,25 +8,27 @@ struct TokenState<'a> {
 }
 
 impl<'a> TokenState<'a> {
-    pub fn next(&mut self) -> &'a str {
+    pub fn next(&mut self) -> Result<&'a str, ()> {
         if self.idx >= self.tokens.len() {
-            panic!("unexpected EOF");
+            println!("unexpected EOF");
+            return Err(())
         }
 
         self.idx += 1;
-        self.tokens[self.idx-1]
+        Ok(self.tokens[self.idx-1])
     }
 
-    pub fn peek(&self) -> &'a str {
+    pub fn peek(&self) -> Result<&'a str, ()> {
         if self.idx >= self.tokens.len() {
-            panic!("unexpected EOF");
+            println!("unexpected EOF");
+            return Err(())
         }
 
-        self.tokens[self.idx]
+        Ok(self.tokens[self.idx])
     }
 }
 
-pub fn read_str(s: &str) -> MalType {
+pub fn read_str(s: &str) -> Result<MalType, ()> {
     let mut tokens = tokenize(s);
     read_form(&mut tokens)
 }
@@ -47,8 +49,8 @@ fn tokenize(s: &str) -> TokenState {
     }
 }
 
-fn read_form<'a>(tokens: &mut TokenState) -> MalType {
-    match tokens.next() {
+fn read_form<'a>(tokens: &mut TokenState) -> Result<MalType, ()> {
+    match tokens.next()? {
         "(" => {
             read_list(tokens)
         },
@@ -58,23 +60,28 @@ fn read_form<'a>(tokens: &mut TokenState) -> MalType {
     }
 }
 
-fn read_list<'a>(tokens: &mut TokenState) -> MalType {
+fn read_list<'a>(tokens: &mut TokenState) -> Result<MalType, ()> {
     let mut items = Vec::new();
     loop {
-        if tokens.peek() == ")" {
-            tokens.next();
+        if tokens.peek()? == ")" {
+            tokens.next()?;
             break;
         } else {
-            items.push(read_form(tokens));
+            items.push(read_form(tokens)?);
         }
     }
-    MalType::List(items)
+    Ok(MalType::List(items))
 }
 
-fn read_atom(t: &str) -> MalType {
+fn read_atom(t: &str) -> Result<MalType, ()> {
     if let Ok(n) = t.parse::<i32>() {
-        MalType::Int(n)
+        Ok(MalType::Int(n))
     } else {
-        MalType::Symbol(String::from(t))
+        let mut chars = t.chars();
+        if chars.next() == Some('"') && chars.last() != Some('"') {
+            println!("unbalanced string: {}", t);
+            return Err(());
+        }
+        Ok(MalType::Symbol(String::from(t)))
     }
 }
