@@ -1,3 +1,8 @@
+pub mod types;
+
+pub mod reader;
+pub mod printer;
+
 #[cfg(test)]
 mod tests {
     #[test]
