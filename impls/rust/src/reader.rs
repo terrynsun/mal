@@ -78,10 +78,59 @@ fn read_atom(t: &str) -> Result<MalType, ()> {
         Ok(MalType::Int(n))
     } else {
         let mut chars = t.chars();
-        if chars.next() == Some('"') && chars.last() != Some('"') {
-            println!("unbalanced string: {}", t);
-            return Err(());
+        if chars.next() == Some('"') {
+            parse_string(t)
+        } else {
+            Ok(MalType::Symbol(String::from(t)))
         }
-        Ok(MalType::Symbol(String::from(t)))
     }
+}
+
+fn parse_string(t: &str) -> Result<MalType, ()> {
+    // This is a very naive/brute force method of doing this because I struggled with the regex
+    // implementation.
+    let mut s = String::with_capacity(t.len());
+    let chars = t.chars().peekable();
+
+    // mini state machine to replace escaped characters
+    // \n with '\n'
+    // \\ with '\'
+    // \" with "
+    // Needs to be kept up to date with the reverse operation in printer.rs
+    let mut escaped = false;
+    let mut quotes = 0;
+    for c in chars {
+        if escaped {
+            if c == 'n' {
+                s.push('\n');
+            } else if c == '\\' {
+                s.push('\\');
+            } else if c == '"' {
+                s.push('"');
+            } else {
+                println!("unknown escaped character '{}' in {}", c, t);
+            }
+            escaped = false;
+        } else if c == '\\' {
+            escaped = true;
+        } else if c == '"' {
+            if c == '"' {
+                // track only unescaped quotes
+                quotes += 1;
+            }
+        } else {
+            s.push(c);
+        }
+    }
+
+    if escaped {
+        println!("unexpected EOF: unfinished escape sequence: {}", t);
+        return Err(());
+    }
+    if quotes != 2 {
+        println!("unexpected EOF: too many or two few quotes ({}): {}", quotes, t);
+        return Err(());
+    }
+
+    Ok(MalType::Str(s))
 }

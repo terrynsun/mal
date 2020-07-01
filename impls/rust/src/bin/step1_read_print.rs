@@ -13,7 +13,7 @@ fn eval(expr: MalType) -> MalType {
 }
 
 fn print(expr: MalType) -> String {
-    mal::printer::pr_str(expr)
+    mal::printer::pr_str(expr, true)
 }
 
 fn rep(s: String) -> Result<String, ()> {
