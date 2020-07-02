@@ -8,27 +8,26 @@ struct TokenState<'a> {
 }
 
 impl<'a> TokenState<'a> {
-    pub fn next(&mut self) -> Result<&'a str, ()> {
+    pub fn next(&mut self) -> MalResult<&'a str> {
         if self.idx >= self.tokens.len() {
-            println!("unexpected EOF");
-            return Err(())
+            return Err(MalError::ParseError("unexpected EOF".to_string()))
         }
 
         self.idx += 1;
         Ok(self.tokens[self.idx-1])
     }
 
-    pub fn peek(&self) -> Result<&'a str, ()> {
+    pub fn peek(&self) -> MalResult<&'a str> {
         if self.idx >= self.tokens.len() {
             println!("unexpected EOF");
-            return Err(())
+            return Err(MalError::ParseError("unexpected EOF".to_string()))
         }
 
         Ok(self.tokens[self.idx])
     }
 }
 
-pub fn read_str(s: &str) -> Result<MalType, ()> {
+pub fn read_str(s: &str) -> MalResult<MalType> {
     let mut tokens = tokenize(s);
     read_form(&mut tokens)
 }
@@ -49,7 +48,7 @@ fn tokenize(s: &str) -> TokenState {
     }
 }
 
-fn read_form<'a>(tokens: &mut TokenState) -> Result<MalType, ()> {
+fn read_form<'a>(tokens: &mut TokenState) -> MalResult<MalType> {
     match tokens.next()? {
         "(" => {
             read_list(tokens)
@@ -60,7 +59,7 @@ fn read_form<'a>(tokens: &mut TokenState) -> Result<MalType, ()> {
     }
 }
 
-fn read_list<'a>(tokens: &mut TokenState) -> Result<MalType, ()> {
+fn read_list<'a>(tokens: &mut TokenState) -> MalResult<MalType> {
     let mut items = Vec::new();
     loop {
         if tokens.peek()? == ")" {
@@ -73,7 +72,7 @@ fn read_list<'a>(tokens: &mut TokenState) -> Result<MalType, ()> {
     Ok(MalType::List(items))
 }
 
-fn read_atom(t: &str) -> Result<MalType, ()> {
+fn read_atom(t: &str) -> MalResult<MalType> {
     if let Ok(n) = t.parse::<i32>() {
         Ok(MalType::Int(n))
     } else {
@@ -86,7 +85,7 @@ fn read_atom(t: &str) -> Result<MalType, ()> {
     }
 }
 
-fn parse_string(t: &str) -> Result<MalType, ()> {
+fn parse_string(t: &str) -> MalResult<MalType> {
     // This is a very naive/brute force method of doing this because I struggled with the regex
     // implementation.
     let mut s = String::with_capacity(t.len());
@@ -108,7 +107,8 @@ fn parse_string(t: &str) -> Result<MalType, ()> {
             } else if c == '"' {
                 s.push('"');
             } else {
-                println!("unknown escaped character '{}' in {}", c, t);
+                return Err(MalError::ParseError(
+                    format!("unknown escaped char '{}' in {}", c, t)));
             }
             escaped = false;
         } else if c == '\\' {
@@ -124,12 +124,12 @@ fn parse_string(t: &str) -> Result<MalType, ()> {
     }
 
     if escaped {
-        println!("unexpected EOF: unfinished escape sequence: {}", t);
-        return Err(());
+        return Err(MalError::ParseError(
+            format!("unexpected EOF: dangling escape backslash: {}", t)));
     }
     if quotes != 2 {
-        println!("unexpected EOF: too many or two few quotes ({}): {}", quotes, t);
-        return Err(());
+        return Err(MalError::ParseError(
+            format!("unexpected EOF: too many or two few quotes ({}): {}", quotes, t)));
     }
 
     Ok(MalType::Str(s))

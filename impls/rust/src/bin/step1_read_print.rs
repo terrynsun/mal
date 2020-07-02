@@ -3,7 +3,7 @@ use std::io::Write;
 
 use mal::types::*;
 
-fn read(s: String) -> Result<MalType, ()> {
+fn read(s: String) -> MalResult<MalType> {
     let trimmed = s.trim();
     mal::reader::read_str(&trimmed)
 }
@@ -16,7 +16,7 @@ fn print(expr: MalType) -> String {
     mal::printer::pr_str(expr, true)
 }
 
-fn rep(s: String) -> Result<String, ()> {
+fn rep(s: String) -> MalResult<String> {
     let a = read(s)?;
     let b = eval(a);
     let c = print(b);
