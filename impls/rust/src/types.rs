@@ -2,10 +2,11 @@ pub type MalList = Vec<MalType>;
 
 #[derive(Debug, Clone)]
 pub enum MalType {
+    Nil,
     Int(i32),
     Symbol(String),
     Str(String),
-    List(MalList)
+    List(MalList),
 }
 
 #[derive(Debug, Clone)]

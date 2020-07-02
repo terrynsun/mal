@@ -15,6 +15,7 @@ fn escape_str(s: &str) -> String {
 
 pub fn pr_str(expr: MalType, print_readably: bool) -> String {
     match expr {
+        MalType::Nil => String::from("nil"),
         MalType::Int(i) => i.to_string(),
         MalType::Symbol(s) => s,
         MalType::Str(s) => {
