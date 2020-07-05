@@ -1,4 +1,11 @@
+use std::collections::HashMap;
+
 pub type MalList = Vec<MalType>;
+
+#[derive(Debug, Clone)]
+pub struct MalHashMap {
+    pub map: HashMap<String, MalType>,
+}
 
 #[derive(Debug, Clone)]
 pub enum MalType {
@@ -9,6 +16,8 @@ pub enum MalType {
     Symbol(String),
     Str(String),
     List(MalList),
+    Vector(MalList),
+    HashMap(MalHashMap),
     Fun(fn(MalList) -> MalResult<MalType>),
 }
 
@@ -18,6 +27,14 @@ impl MalType {
             true
         } else {
             false
+        }
+    }
+
+    // Returns the string from a String or Keyword
+    pub fn get_string(&self) -> Option<String> {
+        match self {
+            MalType::Str(s) | MalType::Keyword(s) => Some(s.clone()),
+            _ => None
         }
     }
 }

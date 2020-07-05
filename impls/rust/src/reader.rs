@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use regex::Regex;
 
 use super::types::*;
@@ -53,7 +54,13 @@ fn read_form<'a>(tokens: &mut TokenState) -> MalResult<MalType> {
             Err(MalError::Empty)
         },
         "(" => {
-            read_list(tokens)
+            read_list(tokens, ")")
+        },
+        "[" => {
+            read_list(tokens, "]")
+        },
+        "{" => {
+            read_list(tokens, "}")
         },
         tok => {
             read_atom(tok)
@@ -61,16 +68,38 @@ fn read_form<'a>(tokens: &mut TokenState) -> MalResult<MalType> {
     }
 }
 
-fn read_list<'a>(tokens: &mut TokenState) -> MalResult<MalType> {
+fn read_list<'a>(tokens: &mut TokenState, end: &'static str) -> MalResult<MalType> {
     let mut items = Vec::new();
     loop {
-        if tokens.peek()? == ")" {
-            tokens.next()?;
-            break;
+        let next = tokens.peek()?;
+        if next == ")" || next == "]" || next == "}" {
+            if next == end {
+                tokens.next()?;
+                break;
+            } else {
+                return Err(MalError::ParseError(
+                        format!("unbalanced parens: expected {}, got {}", end, next)));
+            }
         }
         items.push(read_form(tokens)?);
     }
-    Ok(MalType::List(items))
+    match end {
+        ")" => Ok(MalType::List(items)),
+        "]" => Ok(MalType::Vector(items)),
+        "}" => {
+            let mut m = HashMap::new();
+            for i in 0..items.len()/2 {
+                let k = items.get(i*2).unwrap().get_string().unwrap();
+                let v = items.get(i*2+1).unwrap();
+                m.insert(k, v.clone());
+            }
+
+            Ok(MalType::HashMap(MalHashMap {
+                map: m
+            }))
+        }
+        _ => panic!("unexpected ending passed to read_list()"),
+    }
 }
 
 fn read_atom(t: &str) -> MalResult<MalType> {
@@ -87,7 +116,7 @@ fn read_atom(t: &str) -> MalResult<MalType> {
         if next == Some('"') {
             parse_string(t)
         } else if next == Some(':') {
-            Ok(MalType::Keyword(String::from(t)))
+            Ok(MalType::Keyword(String::from(&t[1..])))
         } else if next == Some(';') {
             Err(MalError::Empty)
         } else {

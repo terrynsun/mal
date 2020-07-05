@@ -29,11 +29,23 @@ pub fn pr_str(expr: MalType, print_readably: bool) -> String {
             }
         },
         MalType::List(exprs) => {
-            let mut acc = Vec::new();
-            for e in exprs {
-                acc.push(pr_str(e, print_readably))
-            }
+            let acc: Vec<String> = exprs.into_iter()
+                .map(|e| pr_str(e, print_readably)).collect();
             format!("({})", acc.join(" "))
+        }
+        MalType::Vector(exprs) => {
+            let acc: Vec<String> = exprs.into_iter()
+                .map(|e| pr_str(e, print_readably)).collect();
+            format!("[{}]", acc.join(" "))
+        }
+        MalType::HashMap(map) => {
+            let mut acc = Vec::new();
+
+            for (k, v) in map.map {
+                acc.push(format!("{} {}", k, pr_str(v, print_readably)));
+            }
+
+            format!("{{{}}}", acc.join(" "))
         }
     }
 }

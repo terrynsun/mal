@@ -39,7 +39,7 @@ fn eval(expr: MalType, env: &HashMap<String, MalType>) -> MalType {
             if let MalType::List(list) = simplified {
                 let op = list.get(0).unwrap();
                 if let MalType::Fun(f) = op {
-                    f(list[1..].to_vec())
+                    f(list[1..].to_vec()).unwrap()
                 } else {
                     MalType::List(list)
                 }
@@ -57,40 +57,40 @@ fn print(expr: MalType) -> String {
     mal::printer::pr_str(expr, true)
 }
 
-fn default_add(args: MalList) -> MalType {
-    MalType::Int(
+fn default_add(args: MalList) -> MalResult<MalType> {
+    Ok(MalType::Int(
         args.into_iter().fold(0, |acc, e| {
             if let MalType::Int(i) = e { acc + i } else { acc }
         })
-    )
+    ))
 }
 
-fn default_sub(args: MalList) -> MalType {
+fn default_sub(args: MalList) -> MalResult<MalType> {
     // So far assumes there are only two arguments, and panics otherwise.
     if args.len() == 2 {
         if let Some(MalType::Int(i1)) = args.get(0) {
             if let Some(MalType::Int(i2)) = args.get(1) {
-                return MalType::Int(i1 - i2);
+                return Ok(MalType::Int(i1 - i2));
             }
         }
     }
     panic!("(-) has invalid arguments: {:?}", args);
 }
 
-fn default_mul(args: MalList) -> MalType {
-    MalType::Int(
+fn default_mul(args: MalList) -> MalResult<MalType> {
+    Ok(MalType::Int(
         args.into_iter().fold(1, |acc, e| {
             if let MalType::Int(i) = e { acc * i } else { acc }
         })
-    )
+    ))
 }
 
-fn default_div(args: MalList) -> MalType {
+fn default_div(args: MalList) -> MalResult<MalType> {
     // So far assumes there are only two arguments, and panics otherwise.
     if args.len() == 2 {
         if let Some(MalType::Int(i1)) = args.get(0) {
             if let Some(MalType::Int(i2)) = args.get(1) {
-                return MalType::Int(i1 / i2);
+                return Ok(MalType::Int(i1 / i2));
             }
         }
     }
