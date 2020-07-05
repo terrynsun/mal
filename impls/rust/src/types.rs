@@ -7,6 +7,7 @@ pub enum MalType {
     Symbol(String),
     Str(String),
     List(MalList),
+    Fun(fn(MalList) -> MalType),
 }
 
 #[derive(Debug, Clone)]
