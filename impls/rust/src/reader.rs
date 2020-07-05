@@ -19,7 +19,6 @@ impl<'a> TokenState<'a> {
 
     pub fn peek(&self) -> MalResult<&'a str> {
         if self.idx >= self.tokens.len() {
-            println!("unexpected EOF");
             return Err(MalError::ParseError("unexpected EOF".to_string()))
         }
 
