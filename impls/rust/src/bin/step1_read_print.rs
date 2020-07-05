@@ -37,7 +37,8 @@ fn repl_loop() -> bool {
 
     match rep(input) {
         Ok(output) => println!("{}", output),
-        Err(e) => println!("error: {:?}", e),
+        Err(MalError::Empty) => (),
+        Err(MalError::ParseError(e)) => println!("error: {:?}", e),
     }
 
     true

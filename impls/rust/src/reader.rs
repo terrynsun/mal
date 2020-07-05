@@ -50,6 +50,9 @@ fn tokenize(s: &str) -> TokenState {
 
 fn read_form<'a>(tokens: &mut TokenState) -> MalResult<MalType> {
     match tokens.next()? {
+        "" => {
+            Err(MalError::Empty)
+        },
         "(" => {
             read_list(tokens)
         },
@@ -65,9 +68,8 @@ fn read_list<'a>(tokens: &mut TokenState) -> MalResult<MalType> {
         if tokens.peek()? == ")" {
             tokens.next()?;
             break;
-        } else {
-            items.push(read_form(tokens)?);
         }
+        items.push(read_form(tokens)?);
     }
     Ok(MalType::List(items))
 }
@@ -76,9 +78,19 @@ fn read_atom(t: &str) -> MalResult<MalType> {
     if let Ok(n) = t.parse::<i32>() {
         Ok(MalType::Int(n))
     } else {
-        let mut chars = t.chars();
-        if chars.next() == Some('"') {
+        match t {
+            "nil"   => return Ok(MalType::Nil),
+            "false" => return Ok(MalType::Bool(false)),
+            "true"  => return Ok(MalType::Bool(true)),
+            _ => (),
+        }
+        let next = t.chars().next();
+        if next == Some('"') {
             parse_string(t)
+        } else if next == Some(':') {
+            Ok(MalType::Keyword(String::from(t)))
+        } else if next == Some(';') {
+            Err(MalError::Empty)
         } else {
             Ok(MalType::Symbol(String::from(t)))
         }

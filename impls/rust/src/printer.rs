@@ -17,8 +17,10 @@ pub fn pr_str(expr: MalType, print_readably: bool) -> String {
     match expr {
         MalType::Nil => String::from("nil"),
         MalType::Fun(_) => format!("TODO: cannot print fn pointers"),
+        MalType::Bool(b) => b.to_string(),
         MalType::Int(i) => i.to_string(),
         MalType::Symbol(s) => s,
+        MalType::Keyword(s) => format!(":{}", s),
         MalType::Str(s) => {
             if print_readably {
                 format!("\"{}\"", escape_str(&s))
