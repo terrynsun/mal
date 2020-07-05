@@ -30,7 +30,7 @@ fn repl_loop() -> bool {
     let mut input = String::new();
     io::stdin().read_line(&mut input).expect("error reading line");
 
-    if input.len() == 0 {
+    if input.is_empty() {
         println!();
         return false;
     }

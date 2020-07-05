@@ -17,11 +17,10 @@ fn eval_ast(expr: MalType, env: &mut MalEnv) -> MalResult<MalType> {
     match expr {
         // Look up a variable in environment
         MalType::Symbol(s) => {
-            // TODO: return not-found error instead of nil
             if let Some(val) = env.get(&s) {
-                return Ok(val.clone());
+                Ok(val)
             } else {
-                return Err(MalError::RuntimeError(format!("{} not found in environment", s)));
+                Err(MalError::RuntimeError(format!("{} not found in environment", s)))
             }
         }
         // Simplify each element in a list
@@ -63,7 +62,7 @@ fn eval(expr: MalType, env: &mut MalEnv) -> MalResult<MalType> {
                         let arg2 = list.get(2).unwrap();
                         let val = eval(arg2.clone(), env)?;
                         update_env(arg1, val.clone(), env)?;
-                        return Ok(val.clone());
+                        return Ok(val);
                     },
                     "let*" => {
                         let mut inner = MalEnv::new(Some(env));
@@ -75,7 +74,6 @@ fn eval(expr: MalType, env: &mut MalEnv) -> MalResult<MalType> {
                                 let arg2 = list.get(i*2 + 1).unwrap();
                                 let val = eval(arg2.clone(), &mut inner)?;
                                 update_env(arg1, val.clone(), &mut inner)?;
-                                println!("{:?} = {:?}", arg1, val);
                             }
                         }
 
@@ -122,7 +120,7 @@ fn repl_loop(env: &mut MalEnv) -> bool {
     let mut input = String::new();
     io::stdin().read_line(&mut input).expect("error reading line");
 
-    if input.len() == 0 {
+    if input.is_empty() {
         println!();
         return false;
     }

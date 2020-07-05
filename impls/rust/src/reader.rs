@@ -48,7 +48,7 @@ fn tokenize(s: &str) -> TokenState {
     }
 }
 
-fn read_form<'a>(tokens: &mut TokenState) -> MalResult<MalType> {
+fn read_form(tokens: &mut TokenState) -> MalResult<MalType> {
     match tokens.next()? {
         "" => {
             Err(MalError::Empty)
@@ -68,7 +68,7 @@ fn read_form<'a>(tokens: &mut TokenState) -> MalResult<MalType> {
     }
 }
 
-fn read_list<'a>(tokens: &mut TokenState, end: &'static str) -> MalResult<MalType> {
+fn read_list(tokens: &mut TokenState, end: &'static str) -> MalResult<MalType> {
     let mut items = Vec::new();
     loop {
         let next = tokens.peek()?;

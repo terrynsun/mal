@@ -23,7 +23,7 @@ pub enum MalType {
 
 impl MalType {
     pub fn is_list(&self) -> bool {
-        if let &MalType::List(_) = self {
+        if let MalType::List(_) = *self {
             true
         } else {
             false

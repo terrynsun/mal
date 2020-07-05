@@ -78,26 +78,22 @@ impl<'a> MalEnv<'a> {
     pub fn find(&self, key: &str) -> bool {
         if self.map.contains_key(key) {
             true
+        } else if let Some(env) = self.outer {
+            env.find(key)
         } else {
-            if let Some(env) = self.outer {
-                env.find(key)
-            } else {
-                false
-            }
+            false
         }
     }
 
-    pub fn get(&self, key: &String) -> Option<MalType> {
+    pub fn get(&self, key: &str) -> Option<MalType> {
         // Technically this isn't implemented the way the instruction suggested, which may or may
         // not become important later.
         if self.map.contains_key(key) {
             Some(self.map.get(key).unwrap().clone())
+        } else if let Some(env) = self.outer {
+            env.get(key)
         } else {
-            if let Some(env) = self.outer {
-                env.get(key)
-            } else {
-                None
-            }
+            None
         }
     }
 }
